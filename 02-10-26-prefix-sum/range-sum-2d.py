@@ -307,3 +307,153 @@ print(res)
 #       Total - Above - Left + Overlap
 #
 # ============================================================
+
+
+
+# proper notes on prefix sum : 
+# ============================================================
+# 2D RANGE SUM QUERY USING 2D PREFIX SUM
+#
+# Idea:
+# Build a prefix sum matrix so that the sum of any rectangular
+# region can be calculated in O(1) time.
+#
+# Prefix matrix is 0-padded:
+#
+# Original matrix:
+#   1 2 3
+#   4 5 6
+#   7 8 9
+#
+# Prefix matrix:
+#   0  0  0  0
+#   0  1  3  6
+#   0  5 12 21
+#   0 12 27 45
+#
+# The extra row and column of 0s eliminate boundary cases.
+# ============================================================
+
+
+# Read number of rows and columns
+rows, cols = input().split()
+
+rows = int(rows)
+cols = int(cols)
+
+
+# Read the 2D matrix
+arr = [list(map(int, input().split())) for _ in range(rows)]
+
+
+# Read starting coordinate of the query
+# (start_i, start_j) = top-left corner
+start_i, start_j = input().split()
+
+start_i = int(start_i)
+start_j = int(start_j)
+
+
+# Read ending coordinate of the query
+# (end_i, end_j) = bottom-right corner
+end_i, end_j = input().split()
+
+end_i = int(end_i)
+end_j = int(end_j)
+
+
+# ------------------------------------------------------------
+# Create a 0-padded prefix sum matrix.
+#
+# Size is (rows + 1) x (cols + 1)
+#
+# Row 0 and column 0 remain 0.
+# ------------------------------------------------------------
+
+pre_sum_mat = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
+
+
+# ------------------------------------------------------------
+# Build the 2D Prefix Sum Matrix
+#
+# prefix[i][j] represents the sum of all elements from
+# the ORIGINAL matrix's (0,0) to (i-1,j-1).
+#
+# Formula:
+#
+# prefix[i][j] =
+#     current cell
+#     + top
+#     + left
+#     - overlapping top-left region
+#
+# We subtract prefix[i-1][j-1] because that region was
+# counted twice.
+# ------------------------------------------------------------
+
+for i in range(1, rows + 1):
+
+    for j in range(1, cols + 1):
+
+        pre_sum_mat[i][j] = (
+            arr[i - 1][j - 1]
+            + pre_sum_mat[i - 1][j]       # Area above
+            + pre_sum_mat[i][j - 1]       # Area to the left
+            - pre_sum_mat[i - 1][j - 1]   # Remove overlapping area
+        )
+
+
+# ------------------------------------------------------------
+# Calculate the sum of the requested rectangle.
+#
+# Because the prefix matrix is 0-padded, the original matrix
+# coordinates are shifted by +1 in the prefix matrix.
+#
+# Inclusion-Exclusion:
+#
+#       TOTAL
+#       - ABOVE
+#       - LEFT
+#       + OVERLAP
+#
+# Formula:
+#
+# prefix[end_i+1][end_j+1]
+# - prefix[start_i][end_j+1]
+# - prefix[end_i+1][start_j]
+# + prefix[start_i][start_j]
+#
+# No special handling is required even when start_i or
+# start_j is 0, because the padded row/column contains 0.
+# ------------------------------------------------------------
+
+res = (
+    pre_sum_mat[end_i + 1][end_j + 1]  # Total rectangle
+    - pre_sum_mat[start_i][end_j + 1]  # Remove area above
+    - pre_sum_mat[end_i + 1][start_j]  # Remove area to the left
+    + pre_sum_mat[start_i][start_j]    # Add overlapping area back
+)
+
+
+# Print the range sum
+print(res)
+
+
+# ============================================================
+# COMPLEXITY
+#
+# Building Prefix Sum Matrix : O(rows * cols)
+# Range Sum Query             : O(1)
+# Space Complexity            : O(rows * cols)
+#
+# KEY PATTERN TO REMEMBER:
+#
+# 2D Prefix Sum:
+#
+#       Current + Top + Left - Overlap
+#
+# Range Query:
+#
+#       Total - Above - Left + Overlap
+#
+# ============================================================
